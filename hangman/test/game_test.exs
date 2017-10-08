@@ -21,27 +21,27 @@ defmodule GameTest do
     for state <- [:won, :lost] do
       game = Game.new_game()
              |> Map.put(:game_state, state)
-      assert game == Game.make_move(game, "x")
+      assert {^game, _} = Game.make_move(game, "x")
     end
   end
 
   test "first ocurrence of letter is not already used" do
     game = Game.new_game()
-    game = Game.make_move(game, "x")
+    {game, _tally} = Game.make_move(game, "x")
     assert game.game_state != :already_used
   end
 
   test "second ocurrence of letter is not already used" do
     game = Game.new_game()
-    game = Game.make_move(game, "x")
+    {game, _tally} = Game.make_move(game, "x")
     assert game.game_state != :already_used
-    game = Game.make_move(game, "x")
+    {game, _tally} = Game.make_move(game, "x")
     assert game.game_state == :already_used
   end
 
   test "a good guess is recognized" do
     game = Game.new_game("wibble")
-    game = Game.make_move(game, "w")
+    {game, _tally} = Game.make_move(game, "w")
     assert game.game_state == :good_guess
     assert game.turns_left == 7
   end
@@ -57,16 +57,20 @@ defmodule GameTest do
 
     game = Game.new_game("wibble")
 
-    Enum.reduce(moves, game, fn ({guess, state}, new_game) ->
-      new_game = Game.make_move(new_game, guess)
-      assert new_game.game_state == state
-      new_game
-    end)
+    Enum.reduce(
+      moves,
+      game,
+      fn ({guess, state}, new_game) ->
+        {new_game, _tally} = Game.make_move(new_game, guess)
+        assert new_game.game_state == state
+        new_game
+      end
+    )
   end
 
   test "bad guess is recognized" do
     game = Game.new_game("wible")
-    game = Game.make_move(game, "x")
+    {game, _tally} = Game.make_move(game, "x")
     assert game.game_state == :bad_guess
     assert game.turns_left == 6
   end
@@ -89,7 +93,7 @@ defmodule GameTest do
       moves,
       game,
       fn ({guess, state, turns_left}, game) ->
-        game = Game.make_move(game, guess)
+        {game, _tally} = Game.make_move(game, guess)
         assert game.game_state == state
         assert game.turns_left == turns_left
         game
